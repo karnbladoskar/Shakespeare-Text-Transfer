@@ -6,7 +6,7 @@ import numpy as np
 
 batch_size = 64 # Batch size for training.
 epochs = 20  # Number of epochs to train for.
-latent_dim = 256  # Latent dimensionality of the encoding space.
+latent_dim = 128  # Latent dimensionality of the encoding space.
 num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
 data_path = 'data/training_data.txt'
@@ -57,7 +57,7 @@ decoder_input_data = np.zeros(
     (len(input_texts), max_decoder_seq_length),
     dtype='float32')
 decoder_target_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length),
+    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
     dtype='float32')
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
@@ -69,20 +69,27 @@ for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
         if t > 0:
             # decoder_target_data will be ahead by one timestep
             # and will not include the start character.
-            decoder_target_data[i, t - 1] = target_token_index[word]
+            decoder_target_data[i, t - 1, target_token_index[word]] = 1.
+            # decoder_target_data[i, t - 1] = target_token_index[word]
 
-encoder_inputs = Input(shape=(None,))
+
+encoder_inputs = Input(shape=(max_encoder_seq_length,))
 x = Embedding(num_encoder_tokens, latent_dim)(encoder_inputs)
 x, state_h, state_c = LSTM(latent_dim,
                            return_state=True)(x)
 encoder_states = [state_h, state_c]
 
+print("h:", state_h.shape, "c:", state_c.shape)
+print("e:", encoder_input_data.shape, "d:", decoder_input_data.shape)
+
 # Set up the decoder, using `encoder_states` as initial state.
-decoder_inputs = Input(shape=(None,))
+decoder_inputs = Input(shape=(max_decoder_seq_length,))
 x = Embedding(num_decoder_tokens, latent_dim)(decoder_inputs)
 x = LSTM(latent_dim, return_sequences=True)(x, initial_state=encoder_states)
+print("before dense:", x.shape)
 decoder_outputs = Dense(num_decoder_tokens, activation='softmax')(x)
 
+print("decoder:", decoder_outputs.shape)
 # Define the model that will turn
 # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
