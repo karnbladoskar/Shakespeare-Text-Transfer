@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from keras.models import Model
-from keras.layers import Input, LSTM, Dense, GRU
+from keras.layers import Input, LSTM, Dense, GRU, Embedding
 import numpy as np
 
 batch_size = 64 # Batch size for training.
@@ -51,25 +51,25 @@ target_token_index = dict(
     [(word, i) for i, word in enumerate(target_words)])
 
 encoder_input_data = np.zeros(
-    (len(input_texts), max_encoder_seq_length, num_encoder_tokens),
+    (len(input_texts), max_encoder_seq_length),
     dtype='float32')
 decoder_input_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    (len(input_texts), max_decoder_seq_length),
     dtype='float32')
 decoder_target_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    (len(input_texts), max_decoder_seq_length),
     dtype='float32')
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
     for t, word in enumerate(input_text.split()):
-        encoder_input_data[i, t, input_token_index[word]] = 1.
+        encoder_input_data[i, t] = input_token_index[word]
     for t, word in enumerate(target_text.split()):
         # decoder_target_data is ahead of decoder_input_data by one timestep
-        decoder_input_data[i, t, target_token_index[word]] = 1.
+        decoder_input_data[i, t] = target_token_index[word]
         if t > 0:
             # decoder_target_data will be ahead by one timestep
             # and will not include the start character.
-            decoder_target_data[i, t - 1, target_token_index[word]] = 1.
+            decoder_target_data[i, t - 1] = target_token_index[word]
 
 encoder_inputs = Input(shape=(None,))
 x = Embedding(num_encoder_tokens, latent_dim)(encoder_inputs)
