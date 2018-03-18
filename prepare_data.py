@@ -33,8 +33,8 @@ def preprocess_data(data):
     for idx, sentence in enumerate(data):
         sentence_processed = first_char_lower(sentence)
         sentence_processed = space_around_special(sentence_processed)
-        sentence_processed = remove_forbidden_special
-        data_processed[idx] = sentence_processed(sentence)
+        sentence_processed = remove_forbidden_special(sentence_processed)
+        data_processed[idx] = sentence_processed
     return data_processed
 
 
