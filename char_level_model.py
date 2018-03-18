@@ -5,7 +5,7 @@ from keras.layers import Input, LSTM, Dense, Bidirectional
 import numpy as np
 
 batch_size = 128  # Batch size for training.
-epochs = 20  # Number of epochs to train for.
+epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 24000  # Number of samples to train on.
 # Path to the data txt file on disk.
@@ -62,14 +62,14 @@ decoder_target_data = np.zeros(
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
     for t, char in enumerate(input_text):
-        encoder_input_data[i, t, input_token_index[char]] = 1.
+        encoder_input_data[i, t + max_encoder_seq_length - len(input_text), input_token_index[char]] = 1.
     for t, char in enumerate(target_text):
         # decoder_target_data is ahead of decoder_input_data by one timestep
-        decoder_input_data[i, t, target_token_index[char]] = 1.
+        decoder_input_data[i, t + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
         if t > 0:
             # decoder_target_data will be ahead by one timestep
             # and will not include the start character.
-            decoder_target_data[i, t - 1, target_token_index[char]] = 1.
+            decoder_target_data[i, t - 1 + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
 
 # Define an input sequence and process it.
 encoder_inputs = Input(shape=(None, num_encoder_tokens))
