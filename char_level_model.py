@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 from keras.models import Model
-from keras.layers import Input, LSTM, Dense
+from keras.layers import Input, LSTM, Dense, Bidirectional
 import numpy as np
 
-batch_size = 256  # Batch size for training.
+batch_size = 128  # Batch size for training.
 epochs = 20  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
-num_samples = 32000  # Number of samples to train on.
+num_samples = 24000  # Number of samples to train on.
 # Path to the data txt file on disk.
 data_path = 'data/char_training_data.txt'
 
@@ -19,7 +19,7 @@ target_characters = set()
 with open(data_path, 'r', encoding='utf-8') as f:
     lines = f.read().split('\n')
 for line in lines[: min(num_samples, len(lines) - 1)]:
-    input_text, target_text = line.split('\t')
+    target_text, input_text = line.split('\t')
     # We use "tab" as the "start sequence" character
     # for the targets, and "\n" as "end sequence" character.
     target_text = '\t' + target_text + '\n'
@@ -73,7 +73,7 @@ for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
 
 # Define an input sequence and process it.
 encoder_inputs = Input(shape=(None, num_encoder_tokens))
-encoder = LSTM(latent_dim, return_state=True)
+encoder = LSTM(latent_dim, dropout=0.3, return_state=True)
 encoder_outputs, state_h, state_c = encoder(encoder_inputs)
 # We discard `encoder_outputs` and only keep the states.
 encoder_states = [state_h, state_c]

@@ -17,7 +17,7 @@ epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = 'fra-eng/fra.txt'
+data_path = 'data/training_data.txt'
 
 # Vectorize the data.  We use the same approach as the training script.
 # NOTE: the data must be identical, in order for the character -> integer
