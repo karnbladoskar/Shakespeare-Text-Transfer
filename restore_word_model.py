@@ -14,10 +14,10 @@ import numpy as np
 
 batch_size = 64  # Batch size for training.
 epochs = 100  # Number of epochs to train for.
-latent_dim = 128  # Latent dimensionality of the encoding space.
-num_samples = 32000  # Number of samples to train on.
+latent_dim = 256  # Latent dimensionality of the encoding space.
+num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = '../../data/char_training_data.txt'
+data_path = 'fra-eng/fra.txt'
 
 # Vectorize the data.  We use the same approach as the training script.
 # NOTE: the data must be identical, in order for the character -> integer
@@ -61,8 +61,16 @@ input_token_index = dict(
 target_token_index = dict(
     [(char, i) for i, char in enumerate(target_characters)])
 
+encoder_input_data = np.zeros(
+    (len(input_texts), max_encoder_seq_length, num_encoder_tokens),
+    dtype='float32')
+
+for i, input_text in enumerate(input_texts):
+    for t, char in enumerate(input_text):
+        encoder_input_data[i, t, input_token_index[char]] = 1.
+
 # Restore the model and construct the encoder and decoder.
-model = load_model('../../char_s2s.h5')
+model = load_model('s2s.h5')
 
 encoder_inputs = model.input[0]   # input_1
 encoder_outputs, state_h_enc, state_c_enc = model.layers[2].output   # lstm_1
@@ -93,16 +101,8 @@ reverse_target_char_index = dict(
 
 # Decodes an input sequence.  Future work should support beam search.
 def decode_sequence(input_seq):
-
-    encoder_input_data = np.zeros(
-        (1, max_encoder_seq_length, num_encoder_tokens),
-        dtype='float32')
-
-    for t, char in enumerate(input_text):
-        encoder_input_data[0, t, input_token_index[char]] = 1.
-
     # Encode the input as state vectors.
-    states_value = encoder_model.predict(encoder_input_data)
+    states_value = encoder_model.predict(input_seq)
 
     # Generate empty target sequence of length 1.
     target_seq = np.zeros((1, 1, num_decoder_tokens))
@@ -136,3 +136,13 @@ def decode_sequence(input_seq):
         states_value = [h, c]
 
     return decoded_sentence
+
+
+for seq_index in range(100):
+    # Take one sequence (part of the training set)
+    # for trying out decoding.
+    input_seq = encoder_input_data[seq_index: seq_index + 1]
+    decoded_sentence = decode_sequence(input_seq)
+    print('-')
+    print('Input sentence:', input_texts[seq_index])
+    print('Decoded sentence:', decoded_sentence)
