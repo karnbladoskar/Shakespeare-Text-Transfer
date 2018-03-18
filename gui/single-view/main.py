@@ -41,15 +41,10 @@ class App(QWidget):
         shake_button.move(220, 20)
         shake_button.clicked.connect(self.on_shake)
 
-        returnText = QTextEdit()
-        returnText.setReadOnly(True)
-
-        self.mainLayout = QGridLayout()
-        self.mainLayout.addWidget(self.textbox, 0, 0)
-        self.mainLayout.addWidget(shake_button, 0, 1)
-        self.mainLayout.addWidget(returnText, 1, 1)
-
-        self.setLayout(self.mainLayout)
+        self.returnText = QTextEdit(self)
+        self.returnText.setReadOnly(True)
+        self.returnText.move(20, 400)
+        self.returnText.resize(200, 30)
 
         self.show()
 
@@ -59,9 +54,8 @@ class App(QWidget):
         self.user_input = self.textbox.text()
         shaked_output = self.make_model_prediction()
 
-        returnText = QTextEdit(shaked_output)
-        self.mainLayout.addWidget(returnText, 1, 1)
-        self.setLayout(self.mainLayout)
+        self.returnText.append(shaked_output)
+        QApplication.processEvents()
 
         self.show()
 
