@@ -26,9 +26,9 @@ class App(QWidget):
 
         # Create widget
         label = QLabel(self)
-        pixmap = QPixmap('../shakespeare.jpg')
-        label.setPixmap(pixmap)
-        label.resize(pixmap.width(), pixmap.height())
+        self.pixmap = QPixmap('../shakespeare.jpg')
+        label.setPixmap(self.pixmap)
+        label.resize(self.pixmap.width(), self.pixmap.height())
 
         # Create textbox
         self.textbox = QLineEdit(self)
@@ -44,9 +44,10 @@ class App(QWidget):
         self.returnText = QTextEdit(self)
         self.returnText.setReadOnly(True)
         self.returnText.move(20, 400)
-        self.returnText.resize(200, 30)
+        self.returnText.resize(200, 50)
 
         self.show()
+
 
     # Define on-shake action
     @pyqtSlot()
@@ -54,10 +55,21 @@ class App(QWidget):
         self.user_input = self.textbox.text()
         shaked_output = self.make_model_prediction()
 
-        self.returnText.append(shaked_output)
+        # Clear output
+        self.returnText.clear()
         QApplication.processEvents()
 
-        self.show()
+        # Append shaked output
+        self.returnText.append(shaked_output)
+
+        # Update background
+        label2 = QLabel(self)
+        self.pixmap2 = QPixmap('../shakespeare_speaks.jpg')
+        label2.setPixmap(self.pixmap2)
+        label2.resize(self.pixmap2.width(), self.pixmap2.height())
+
+        QApplication.processEvents()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
