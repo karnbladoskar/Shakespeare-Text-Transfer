@@ -4,10 +4,10 @@ from keras.models import Model
 from keras.layers import Input, LSTM, Dense, GRU, Embedding
 import numpy as np
 
-batch_size = 64 # Batch size for training.
+batch_size = 32 # Batch size for training.
 epochs = 20  # Number of epochs to train for.
 latent_dim = 128  # Latent dimensionality of the encoding space.
-num_samples = 10000  # Number of samples to train on.
+num_samples = 12000  # Number of samples to train on.
 # Path to the data txt file on disk.
 data_path = 'data/training_data.txt'
 
@@ -22,7 +22,7 @@ for line in lines[: min(num_samples, len(lines) - 1)]:
     target_text, input_text = line.split('\t')
     # We use "tab" as the "start sequence" character
     # for the targets, and "\n" as "end sequence" character.
-    target_text = '\t' + target_text + '\n'
+    target_text = '<START> ' + target_text + ' <END>'
     input_texts.append(input_text)
     target_texts.append(target_text)
     for word in input_text.split():
@@ -84,10 +84,13 @@ print("e:", encoder_input_data.shape, "d:", decoder_input_data.shape)
 
 # Set up the decoder, using `encoder_states` as initial state.
 decoder_inputs = Input(shape=(max_decoder_seq_length,))
-x = Embedding(num_decoder_tokens, latent_dim)(decoder_inputs)
-x = LSTM(latent_dim, return_sequences=True)(x, initial_state=encoder_states)
+embedding_layer = Embedding(num_decoder_tokens, latent_dim)
+embedded = embedding_layer(decoder_inputs)
+decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True)
+x, _, _ = decoder_lstm(embedded, initial_state=encoder_states)
 print("before dense:", x.shape)
-decoder_outputs = Dense(num_decoder_tokens, activation='softmax')(x)
+decoder_dense = Dense(num_decoder_tokens, activation='softmax')
+decoder_outputs = decoder_dense(x) 
 
 print("decoder:", decoder_outputs.shape)
 # Define the model that will turn
@@ -100,11 +103,10 @@ model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
 # rather than sequences of integers like `decoder_input_data`!
 model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=batch_size,
-          epochs=epochs,
-          validation_split=0.2)
+          epochs=epochs)
 
 # Save model
-model.save('s2s.h5')
+model.save('word_s2s.h5')
 
 # Next: inference mode (sampling).
 # Here's the drill:
@@ -120,8 +122,9 @@ encoder_model = Model(encoder_inputs, encoder_states)
 decoder_state_input_h = Input(shape=(latent_dim,))
 decoder_state_input_c = Input(shape=(latent_dim,))
 decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+decoder_embedding = embedding_layer(decoder_inputs)
 decoder_outputs, state_h, state_c = decoder_lstm(
-    decoder_inputs, initial_state=decoder_states_inputs)
+    decoder_embedding, initial_state=decoder_states_inputs)
 decoder_states = [state_h, state_c]
 decoder_outputs = decoder_dense(decoder_outputs)
 decoder_model = Model(
@@ -141,9 +144,9 @@ def decode_sequence(input_seq):
     states_value = encoder_model.predict(input_seq)
 
     # Generate empty target sequence of length 1.
-    target_seq = np.zeros((1, 1, num_decoder_tokens))
+    target_seq = np.zeros((1, max_decoder_seq_length))
     # Populate the first character of target sequence with the start character.
-    target_seq[0, 0, target_token_index['\t']] = 1.
+    target_seq[0, 0] = target_token_index['<START>']
 
     # Sampling loop for a batch of sequences
     # (to simplify, here we assume a batch of size 1).
@@ -156,17 +159,17 @@ def decode_sequence(input_seq):
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
         sampled_char = reverse_target_char_index[sampled_token_index]
-        decoded_sentence += sampled_char
+        decoded_sentence += sampled_char + ' '
 
         # Exit condition: either hit max length
         # or find stop character.
-        if (sampled_char == '\n' or
+        if (sampled_char == '<END>' or
            len(decoded_sentence) > max_decoder_seq_length):
             stop_condition = True
 
         # Update the target sequence (of length 1).
-        target_seq = np.zeros((1, 1, num_decoder_tokens))
-        target_seq[0, 0, sampled_token_index] = 1.
+        target_seq = np.zeros((1, max_decoder_seq_length))
+        target_seq[0, 0] = sampled_token_index
 
         # Update states
         states_value = [h, c]
@@ -174,7 +177,7 @@ def decode_sequence(input_seq):
     return decoded_sentence
 
 
-for seq_index in range(100):
+for seq_index in range(20):
     # Take one sequence (part of the training set)
     # for trying out decoding.
     input_seq = encoder_input_data[seq_index: seq_index + 1]
