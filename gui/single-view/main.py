@@ -8,12 +8,6 @@ import restore_char_model as rcm
 
 class App(QWidget):
 
-    def make_model_prediction(self):
-        shaked_output = rcm.decode_sequence(self.user_input)
-        print(shaked_output)
-
-        return shaked_output
-
     def __init__(self):
         super().__init__()
         self.title = 'Shakey Shakespeare'
@@ -43,7 +37,7 @@ class App(QWidget):
 
         self.returnText = QTextEdit(self)
         self.returnText.setReadOnly(True)
-        self.returnText.move(20, 400)
+        self.returnText.move(300, 75)
         self.returnText.resize(200, 50)
 
         self.show()
@@ -53,23 +47,23 @@ class App(QWidget):
     @pyqtSlot()
     def on_shake(self):
         self.user_input = self.textbox.text()
-        shaked_output = self.make_model_prediction()
+        self.shaked_output = self.make_model_prediction()
 
         # Clear output
         self.returnText.clear()
         QApplication.processEvents()
 
         # Append shaked output
-        self.returnText.append(shaked_output)
-
-        # Update background
-        label2 = QLabel(self)
-        self.pixmap2 = QPixmap('../shakespeare_speaks.jpg')
-        label2.setPixmap(self.pixmap2)
-        label2.resize(self.pixmap2.width(), self.pixmap2.height())
-
+        self.returnText.append(self.shaked_output)
         QApplication.processEvents()
 
+
+    def make_model_prediction(self):
+        self.shaked_output = rcm.decode_sequence(self.user_input)
+        print(self.user_input)
+        print(self.shaked_output)
+
+        return self.shaked_output
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

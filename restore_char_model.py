@@ -102,7 +102,7 @@ def decode_sequence(input_seq):
         (1, max_encoder_seq_length, num_encoder_tokens),
         dtype='float32')
 
-    for t, char in enumerate(input_text):
+    for t, char in enumerate(input_seq):
         encoder_input_data[0, t, input_token_index[char]] = 1.
 
     # Encode the input as state vectors.
