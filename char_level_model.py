@@ -4,12 +4,12 @@ from keras.models import Model
 from keras.layers import Input, LSTM, Dense, Bidirectional
 import numpy as np
 
-batch_size = 128  # Batch size for training.
-epochs = 100  # Number of epochs to train for.
+batch_size = 32  # Batch size for training.
+epochs = 10  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 24000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = 'data/char_short_training.txt'
+data_path = 'data/char_short_data.txt'
 
 # Vectorize the data.
 input_texts = []
@@ -62,18 +62,21 @@ decoder_target_data = np.zeros(
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
     for t, char in enumerate(input_text):
-        encoder_input_data[i, t + max_encoder_seq_length - len(input_text), input_token_index[char]] = 1.
+        #encoder_input_data[i, t + max_encoder_seq_length - len(input_text), input_token_index[char]] = 1.
+        encoder_input_data[i, t, input_token_index[char]] = 1.
     for t, char in enumerate(target_text):
         # decoder_target_data is ahead of decoder_input_data by one timestep
-        decoder_input_data[i, t + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
+        #decoder_input_data[i, t + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
+        decoder_input_data[i, t, target_token_index[char]] = 1.
         if t > 0:
             # decoder_target_data will be ahead by one timestep
             # and will not include the start character.
-            decoder_target_data[i, t - 1 + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
+            decoder_target_data[i, t - 1, target_token_index[char]] = 1.
+            #decoder_target_data[i, t - 1 + max_decoder_seq_length - len(target_text), target_token_index[char]] = 1.
 
 # Define an input sequence and process it.
 encoder_inputs = Input(shape=(None, num_encoder_tokens))
-encoder = LSTM(latent_dim, dropout=0.3, return_state=True)
+encoder = LSTM(latent_dim, dropout=0.5, return_state=True)
 encoder_outputs, state_h, state_c = encoder(encoder_inputs)
 # We discard `encoder_outputs` and only keep the states.
 encoder_states = [state_h, state_c]
@@ -170,7 +173,7 @@ def decode_sequence(input_seq):
     return decoded_sentence
 
 
-for seq_index in range(100):
+for seq_index in range(10):
     # Take one sequence (part of the training set)
     # for trying out decoding.
     input_seq = encoder_input_data[seq_index: seq_index + 1]
