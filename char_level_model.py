@@ -5,7 +5,7 @@ from keras.layers import Input, LSTM, Dense, Bidirectional
 import numpy as np
 
 batch_size = 32  # Batch size for training.
-epochs = 10  # Number of epochs to train for.
+epochs = 14  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 24000  # Number of samples to train on.
 # Path to the data txt file on disk.
