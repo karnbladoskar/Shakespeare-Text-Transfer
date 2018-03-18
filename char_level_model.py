@@ -9,7 +9,7 @@ epochs = 20  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 24000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = 'data/char_training_data.txt'
+data_path = 'data/char_short_training.txt'
 
 # Vectorize the data.
 input_texts = []
