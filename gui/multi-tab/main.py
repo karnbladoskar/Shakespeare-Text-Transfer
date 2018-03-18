@@ -2,7 +2,8 @@ import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QLabel, QTabWidget, QVBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import pyqtSlot
-
+sys.path.append('../../')
+import restore_char_model as rcm
 
 class App(QMainWindow):
 
@@ -24,6 +25,16 @@ class App(QMainWindow):
 
 class Shakespeare(QWidget):
 
+    def make_model_prediction(self):
+        try:
+            shaked_output = rcm.decode_sequence(self.user_input)
+
+        except ValueError:
+            sys.exit()
+
+        return shaked_output
+
+
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
         self.layout = QVBoxLayout(self)
@@ -43,9 +54,9 @@ class Shakespeare(QWidget):
 
             # Create widget
         self.label = QLabel(self)
-        self.pixmap = QPixmap('shakespeare.jpg')
+        self.pixmap = QPixmap('../shakespeare.jpg')
         self.label.setPixmap(self.pixmap)
-        self.label.resize(2880, 1800)
+        self.label.resize(1080, 720)
 
             # Create textbox
         self.textbox = QLineEdit(self)
@@ -79,8 +90,8 @@ class Shakespeare(QWidget):
     # Define on-shake action
     @pyqtSlot()
     def on_shake(self):
-        user_input = self.textbox.text()
-        print(user_input)
+        self.user_input = self.textbox.text()
+        shaked_output = self.make_model_prediction()
 
 
 if __name__ == '__main__':
