@@ -11,6 +11,8 @@ from __future__ import print_function
 from keras.models import Model, load_model
 from keras.layers import Input
 import numpy as np
+import warnings
+warnings.filterwarnings("ignore")
 
 batch_size = 64  # Batch size for training.
 epochs = 100  # Number of epochs to train for.
